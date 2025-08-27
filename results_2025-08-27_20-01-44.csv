@@ -1,0 +1,4 @@
+username,password,result
+student,Password123,Pass
+testuser2,pass456,Fail
+testuser3,wrongpass,Fail
