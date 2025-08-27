@@ -1,10 +1,8 @@
-name: Internship CI Pipeline
+name: Internship Tasks CI Pipeline
 
 on:
   push:
-    branches: [ "main" ]
   pull_request:
-    branches: [ "main" ]
 
 jobs:
   build-and-test:
@@ -12,42 +10,45 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
-    # Setup Python
+    # ---------- Run Selenium CSV Test ----------
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
-        python-version: "3.12"
+        python-version: '3.10'
 
-    - name: Install Python dependencies
+    - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install selenium pandas
 
-    # Setup Node.js (for Newman)
-    - name: Set up Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '18'
-
-    - name: Install Newman & Reporter
-      run: |
-        npm install -g newman newman-reporter-htmlextra
-
-    # Run Selenium Tests
-    - name: Run Selenium Data Driven Tests
+    - name: Run Selenium Data-Driven Test
       run: |
         python selenium_ddt_csv.py || true
 
-    # Run API Tests
-    - name: Run Newman API Tests
-      run: |
-        newman run task2_api_testing/API_Testing_Collection.postman_collection.json -r htmlextra --reporter-htmlextra-export api_test_report.html
+    - name: Upload Selenium Results
+      uses: actions/upload-artifact@v4
+      with:
+        name: selenium-results
+        path: results_*.csv
 
-    # Upload Reports
-    - name: Upload API Report
-      uses: actions/upload-artifact@v3
+    # ---------- Run API Newman Test ----------
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+
+    - name: Install Newman + Reporter
+      run: |
+        npm install -g newman newman-reporter-htmlextra
+
+    - name: Run Newman Tests
+      run: |
+        newman run task2_api_testing/API_Testing_Collection.postman_collection.json -r htmlextra
+
+    - name: Upload API Test Report
+      uses: actions/upload-artifact@v4
       with:
         name: api-test-report
-        path: api_test_report.html
+        path: newman/*.html
